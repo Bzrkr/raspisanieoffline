@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выгрузка расписаний преподавателей</title>
+    <link rel="stylesheet" href="styles.css?v=1.0.1">
+    <style>
+        .panel { max-width: 960px; margin: 24px auto; padding: 16px; }
+        .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .log { margin-top: 12px; padding: 12px; max-height: 40vh; overflow: auto; background: #111; color: #dedede; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; border-radius: 6px; }
+        .progress { height: 10px; background: #333; border-radius: 999px; overflow: hidden; }
+        .progress > div { height: 100%; background: #3b82f6; width: 0%; transition: width .2s; }
+        .small { color: #aaa; font-size: 12px; }
+        .btn { padding: 8px 12px; background: #2b2b2b; color: #fff; border-radius: 6px; cursor: pointer; border: 1px solid #444; }
+        .btn[disabled] { opacity: .6; cursor: not-allowed; }
+        .notice { margin-top: 8px; color: #bbb; }
+    </style>
+    <script>
+        async function fetchJson(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+            return res.json();
+        }
+
+        function log(line) {
+            const el = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            el.textContent += `[${time}] ${line}\n`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function setProgress(done, total) {
+            const pct = total > 0 ? Math.round(done * 100 / total) : 0;
+            document.getElementById('bar').style.width = pct + '%';
+            document.getElementById('pct').textContent = pct + '%';
+        }
+
+        function saveAsJson(filename, data) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        async function startDownload() {
+            const btn = document.getElementById('start');
+            btn.disabled = true;
+            document.getElementById('bar').style.width = '0%';
+            document.getElementById('pct').textContent = '0%';
+            document.getElementById('log').textContent = '';
+
+            try {
+                log('Загружаю список преподавателей...');
+                const teachers = await fetchJson('https://iis.bsuir.by/api/v1/employees/all');
+                log(`Преподавателей: ${teachers.length}`);
+
+                const total = teachers.length;
+                let done = 0;
+                setProgress(done, total);
+
+                const schedulesByTeacher = {};
+
+                // Параллельность по батчам для снижения нагрузки
+                const batchSize = 10;
+                for (let i = 0; i < teachers.length; i += batchSize) {
+                    const batch = teachers.slice(i, i + batchSize);
+                    await Promise.all(batch.map(async (t) => {
+                        try {
+                            const sc = await fetchJson(`https://iis.bsuir.by/api/v1/employees/schedule/${t.urlId}`);
+                            schedulesByTeacher[t.urlId] = sc;
+                            log(`✓ ${t.fio}`);
+                        } catch (e) {
+                            schedulesByTeacher[t.urlId] = { schedules: {}, previousSchedules: {} };
+                            log(`✗ ${t.fio}: ${e.message}`);
+                        } finally {
+                            done += 1;
+                            setProgress(done, total);
+                        }
+                    }));
+                }
+
+                const payload = {
+                    generatedAt: new Date().toISOString(),
+                    teachers: teachers,
+                    teacherSchedules: schedulesByTeacher
+                };
+
+                saveAsJson('schedules.json', payload);
+                log('Готово. Файл schedules.json сохранён. Загрузите его в корень сайта (рядом с index.html).');
+            } catch (e) {
+                log('Ошибка: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="panel">
+        <h2>Выгрузка расписаний преподавателей</h2>
+        <div class="row">
+            <button id="start" class="btn" onclick="startDownload()">Начать выгрузку</button>
+            <a class="btn" href="index.html">↩ Назад</a>
+        </div>
+        <div class="progress" style="margin-top:12px;"><div id="bar"></div></div>
+        <div class="small" id="pct" style="margin-top:6px;">0%</div>
+        <div id="log" class="log"></div>
+        <div class="notice">После выгрузки загрузите файл <b>schedules.json</b> в корень проекта (например, вручную через Git), затем основная страница начнёт использовать его вместо API.</div>
+    </div>
+</body>
+</html>
+
+
