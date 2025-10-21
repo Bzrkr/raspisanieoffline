@@ -40,7 +40,7 @@
             document.getElementById('loading').style.display = 'flex';
             try {
         // Обновляем текст загрузки
-        document.querySelector('#loading span').textContent = 'Загрузка локального файла schedules.json...';
+        document.querySelector('#loading span').textContent = 'Загрузка...';
 
         // Загружаем локальный файл с выгрузкой
         const payload = await fetchJson('./schedules.json');
