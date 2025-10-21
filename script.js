@@ -20,6 +20,7 @@
         let teachersData = null;
         let teacherSchedulesData = null;
         let lastIsMobile = (typeof window !== 'undefined') ? window.innerWidth <= 768 : false;
+        let timeUpdateTimer = null;
 
         // Функция для получения списка аудиторий с учетом чекбокса
         function getAuditoriesToShow() {
@@ -131,6 +132,66 @@
         function convertToMinutes(timeStr) {
             const [hours, minutes] = timeStr.split(':').map(Number);
             return hours * 60 + minutes;
+        }
+
+        function updateTimeDots() {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            
+            // Находим текущий или следующий временной интервал
+            let currentSlotIndex = -1;
+            
+            for (let i = 0; i < timeSlotsOrder.length; i++) {
+                const [start, end] = timeSlotsOrder[i].split('—');
+                const startMinutes = convertToMinutes(start.trim());
+                const endMinutes = convertToMinutes(end.trim());
+                
+                // Если текущее время до начала этого интервала - это наш следующий интервал
+                if (currentMinutes < startMinutes) {
+                    currentSlotIndex = i;
+                    break;
+                }
+                // Если мы внутри этого интервала
+                if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+                    currentSlotIndex = i;
+                    break;
+                }
+            }
+            
+            // Если все интервалы прошли, выбираем последний
+            if (currentSlotIndex === -1) {
+                currentSlotIndex = timeSlotsOrder.length - 1;
+            }
+            
+            // Обновляем индикаторы времени
+            const timeHeaders = document.querySelectorAll('.time-cell');
+            const auditoryCells = document.querySelectorAll('.auditory-cell');
+            
+            // Убираем все текущие подсветки
+            timeHeaders.forEach(el => el.classList.remove('current-time-slot'));
+            auditoryCells.forEach(el => el.classList.remove('current-time-slot'));
+            
+            // Подсвечиваем текущий интервал
+            if (currentSlotIndex >= 0 && currentSlotIndex < timeHeaders.length) {
+                timeHeaders[currentSlotIndex].classList.add('current-time-slot');
+                
+                // Подсвечиваем соответствующие ячейки аудиторий
+                const auditoriesToShow = getAuditoriesToShow();
+                const startIndex = currentSlotIndex * auditoriesToShow.length;
+                for (let i = 0; i < auditoriesToShow.length; i++) {
+                    const cellIndex = startIndex + i;
+                    if (cellIndex < auditoryCells.length) {
+                        auditoryCells[cellIndex].classList.add('current-time-slot');
+                    }
+                }
+            }
+            
+            // Обновляем мобильную версию
+            const mobileTimeContainers = document.querySelectorAll('.mobile-time-container');
+            mobileTimeContainers.forEach(el => el.classList.remove('current-time-slot-mobile'));
+            if (currentSlotIndex >= 0 && currentSlotIndex < mobileTimeContainers.length) {
+                mobileTimeContainers[currentSlotIndex].classList.add('current-time-slot-mobile');
+            }
         }
 
         function getLessonTypeClass(lessonType) {
@@ -609,6 +670,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadInitialData();
             
+            // Запускаем таймер обновления индикаторов времени
+            updateTimeDots(); // Первое обновление сразу
+            timeUpdateTimer = setInterval(updateTimeDots, 60000); // Каждую минуту
+            
             // Обработчик изменения даты
             document.getElementById('datePicker').addEventListener('change', async (e) => {
                 const selectedDate = new Date(e.target.value);
@@ -671,4 +736,13 @@ document.getElementById('nextDayBtn').addEventListener('click', () => {
     
     // Триггерим событие change
     datePicker.dispatchEvent(new Event('change'));
-});});
+});
+
+// Очистка таймера при выгрузке страницы
+window.addEventListener('beforeunload', () => {
+    if (timeUpdateTimer) {
+        clearInterval(timeUpdateTimer);
+        timeUpdateTimer = null;
+    }
+});
+});
