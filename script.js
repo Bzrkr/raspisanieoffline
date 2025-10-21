@@ -40,7 +40,7 @@
             document.getElementById('loading').style.display = 'flex';
             try {
         // Обновляем текст загрузки
-        document.querySelector('#loading span').textContent = 'Загрузка...';
+        document.querySelector('#loading span').textContent = 'Загрузка локального файла schedules.json...';
 
         // Загружаем локальный файл с выгрузкой
         const payload = await fetchJson('./schedules.json');
@@ -194,10 +194,7 @@
             }
         }
 
-        function getLessonTypeClass(lessonType, isAnnouncement = false) {
-            if (isAnnouncement) {
-                return 'announcement';
-            }
+        function getLessonTypeClass(lessonType) {
             const typeMap = {
                 'ЛК': 'lecture',
                 'ПЗ': 'practice',
@@ -228,12 +225,8 @@
                     for (const lesson of daySchedule) {
                         const weekNumbers = lesson?.weekNumber || [];
                         
-                        // Определяем, является ли запись объявлением (для проверки недели)
-                        const isAnnouncementForWeek = lesson.announcement || 
-                            (!lesson.subject && !lesson.subjectFullName && lesson.note && lesson.note.trim());
-                        
                         if (lesson.auditories && lesson.auditories.includes(auditory) && 
-                            (isAnnouncementForWeek || (Array.isArray(weekNumbers) && weekNumbers.includes(weekNumber)))) {
+                            Array.isArray(weekNumbers) && weekNumbers.includes(weekNumber)) {
                             
                             const startDate = parseDate(lesson.startLessonDate);
                             const endDate = parseDate(lesson.endLessonDate);
@@ -252,13 +245,9 @@
                                         if (!schedule[timeSlot]) {
                                             schedule[timeSlot] = [];
                                         }
-                                        // Определяем, является ли запись объявлением
-                                        const isAnnouncement = lesson.announcement || 
-                                            (!lesson.subject && !lesson.subjectFullName && lesson.note && lesson.note.trim());
-                                        
-                                        const subjectDisplay = isAnnouncement
-                                            ? 'ОБЪЯВЛЕНИЕ'
-                                            : ((lesson.subject && lesson.subject.trim()) ? lesson.subject : '');
+                                        const subjectDisplay = (lesson.subject && lesson.subject.trim())
+                                            ? lesson.subject
+                                            : ((lesson.note && lesson.note.trim()) ? 'ОБЪЯВЛЕНИЕ' : '');
                                         schedule[timeSlot].push({
                                             subject: subjectDisplay,
                                             type: lesson.lessonTypeAbbrev,
@@ -271,8 +260,7 @@
                                             teacherUrlId: teacher.urlId,
                                             groups: lesson.studentGroups?.map(g => g.name) || [],
                                             startTime: lessonStartTime,
-                                            endTime: lessonEndTime,
-                                            isAnnouncement: isAnnouncement
+                                            endTime: lessonEndTime
                                         });
                                     }
                                 }
@@ -411,7 +399,7 @@
                         if (lessons && lessons.length > 0) {
                             lessons.forEach(lesson => {
                                 const lessonDiv = document.createElement('div');
-                                const typeClass = getLessonTypeClass(lesson.type, lesson.isAnnouncement);
+                                const typeClass = getLessonTypeClass(lesson.type);
                                 lessonDiv.className = `lesson ${typeClass}`;
                                 
                                 const startTime = lesson.startTime.substring(0, 5);
@@ -596,7 +584,7 @@
                         if (lessonsInThisSlot.length > 0) {
                             lessonsInThisSlot.forEach(lesson => {
                             const lessonDiv = document.createElement('div');
-                            const typeClass = getLessonTypeClass(lesson.type, lesson.isAnnouncement);
+                            const typeClass = getLessonTypeClass(lesson.type);
                             lessonDiv.className = `mobile-lesson ${typeClass}`;
                             const startTime = lesson.startTime.substring(0, 5);
                             const endTime = lesson.endTime.substring(0, 5);
