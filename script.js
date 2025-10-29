@@ -49,7 +49,7 @@
                 
                 // Устанавливаем текущую дату
                 const today = new Date();
-                //today.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
                 const yyyy = today.getFullYear();
                 const mm = String(today.getMonth() + 1).padStart(2, '0');
                 const dd = String(today.getDate()).padStart(2, '0');
@@ -228,25 +228,40 @@
                     
                     for (const lesson of daySchedule) {
                         const weekNumbers = lesson?.weekNumber || [];
+                        // Нормализуем недели к числам
+                        const normalizedWeeks = Array.isArray(weekNumbers)
+                            ? weekNumbers.map(w => Number(w)).filter(w => Number.isInteger(w))
+                            : [];
                         
-                        // Определяем, является ли запись объявлением (для проверки недели)
-                        const isAnnouncementForWeek = lesson.announcement || 
-                            (!lesson.subject && !lesson.subjectFullName && lesson.note && lesson.note.trim());
+                        // Определяем, является ли запись объявлением:
+                        // 1) явный флаг announcement
+                        // 2) subject == null И subjectFullName == null И note непустой
+                        const isAnnouncementForWeek = Boolean(lesson.announcement) || (
+                            (lesson.subject == null) && (lesson.subjectFullName == null) && !!(lesson.note && String(lesson.note).trim())
+                        );
                         
                         // Если объявления отключены и это объявление, пропускаем
                         if (!showAnnouncements && isAnnouncementForWeek) {
                             continue;
                         }
                         
-                        if (lesson.auditories && lesson.auditories.includes(auditory) && 
-                            (isAnnouncementForWeek || (Array.isArray(weekNumbers) && weekNumbers.includes(weekNumber)))) {
+                        // Сопоставление аудиторий по триммированным строкам
+                        const lessonAuditories = Array.isArray(lesson.auditories)
+                            ? lesson.auditories.map(a => (a ?? '').trim())
+                            : [];
+                        const targetAuditory = (auditory ?? '').trim();
+                        const isWeekMatch = isAnnouncementForWeek || normalizedWeeks.includes(Number(weekNumber));
+
+                        if (lessonAuditories.length > 0 && lessonAuditories.includes(targetAuditory) && isWeekMatch) {
                             
-                            const startDate = parseDate(lesson.startLessonDate);
+                                const startDate = parseDate(lesson.startLessonDate);
                             const endDate = parseDate(lesson.endLessonDate);
                             const lessonDate = parseDate(lesson.dateLesson);
+                            // Нормализуем выбранную дату к полуночи для корректного включения конечной даты
+                            const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
                             
-                            if ((startDate && endDate && timeInRange(startDate, endDate, date)) || 
-                                (lessonDate && date.toDateString() === lessonDate.toDateString())) {
+                            if ((startDate && endDate && timeInRange(startDate, endDate, normalizedDate)) || 
+                                (lessonDate && normalizedDate.toDateString() === lessonDate.toDateString())) {
                                 
                                 const lessonStartTime = lesson.startLessonTime;
                                 const lessonEndTime = lesson.endLessonTime;
@@ -258,9 +273,10 @@
                                         if (!schedule[timeSlot]) {
                                             schedule[timeSlot] = [];
                                         }
-                                        // Определяем, является ли запись объявлением
-                                        const isAnnouncement = lesson.announcement || 
-                                            (!lesson.subject && !lesson.subjectFullName && lesson.note && lesson.note.trim());
+                                        // Определяем, является ли запись объявлением по тем же правилам
+                                        const isAnnouncement = Boolean(lesson.announcement) || (
+                                            (lesson.subject == null) && (lesson.subjectFullName == null) && !!(lesson.note && String(lesson.note).trim())
+                                        );
                                         
                                         const subjectDisplay = isAnnouncement
                                             ? 'ОБЪЯВЛЕНИЕ'
@@ -272,7 +288,7 @@
                                             startDate: lesson.startLessonDate || null,
                                             endDate: lesson.endLessonDate || null,
                                             dateLesson: lesson.dateLesson || null,
-                                            weeks: Array.isArray(weekNumbers) ? weekNumbers : [],
+                                            weeks: normalizedWeeks,
                                             teacher: teacher.fio,
                                             teacherUrlId: teacher.urlId,
                                             groups: lesson.studentGroups?.map(g => g.name) || [],
