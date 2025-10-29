@@ -216,6 +216,7 @@
         async function getScheduleForAuditory(auditory, date, weekNumber) {
             const schedule = {};
             const dayName = dayNames[date.getDay()];
+            const showAnnouncements = document.getElementById('showAnnouncementsCheckbox').checked;
             
             if (!teachersData || !teacherSchedulesData) return schedule;
 
@@ -231,6 +232,11 @@
                         // Определяем, является ли запись объявлением (для проверки недели)
                         const isAnnouncementForWeek = lesson.announcement || 
                             (!lesson.subject && !lesson.subjectFullName && lesson.note && lesson.note.trim());
+                        
+                        // Если объявления отключены и это объявление, пропускаем
+                        if (!showAnnouncements && isAnnouncementForWeek) {
+                            continue;
+                        }
                         
                         if (lesson.auditories && lesson.auditories.includes(auditory) && 
                             (isAnnouncementForWeek || (Array.isArray(weekNumbers) && weekNumbers.includes(weekNumber)))) {
@@ -709,6 +715,15 @@
             
             // Обработчик изменения чекбокса "Показать все кабинеты"
             document.getElementById('showAllAuditoriesCheckbox').addEventListener('change', async () => {
+                if (document.getElementById('datePicker') && document.getElementById('datePicker').value) {
+                    const selectedDate = new Date(document.getElementById('datePicker').value);
+                    const weekNumber = calculateWeekNumber(selectedDate);
+                    await updateSchedule(selectedDate, weekNumber);
+                }
+            });
+            
+            // Обработчик изменения чекбокса "Объявления"
+            document.getElementById('showAnnouncementsCheckbox').addEventListener('change', async () => {
                 if (document.getElementById('datePicker') && document.getElementById('datePicker').value) {
                     const selectedDate = new Date(document.getElementById('datePicker').value);
                     const weekNumber = calculateWeekNumber(selectedDate);
