@@ -448,7 +448,7 @@ padding: 4px;
             padding-top: 6px;
             border-top: 1px dashed #ddd;
             font-size: 0.85em;
-            color: #444;
+            color: #ff0000;
         }
         
         .group-link {
@@ -731,4 +731,5 @@ padding: 4px;
             /* На мобильных показываем элементы с классом mobile-only */
             .mobile-only { display: inline-flex; }
         }
+
 
