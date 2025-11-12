@@ -719,7 +719,7 @@ padding: 4px;
                 padding-top: 6px;
                 border-top: 1px dashed #eee;
                 font-size: 0.85em;
-                color: #444;
+                color: #ff0000;
             }
             
             /* Стили для чекбоксов в мобильной версии */
@@ -731,4 +731,5 @@ padding: 4px;
             /* На мобильных показываем элементы с классом mobile-only */
             .mobile-only { display: inline-flex; }
         }
+
 
