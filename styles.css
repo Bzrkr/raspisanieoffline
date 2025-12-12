@@ -500,6 +500,10 @@ padding: 4px;
         .Instlab{ background-color: #ffffff; border-left: 4px solid #f98f43; }
         .Instlecture{ background-color: #ffffff; border-left: 4px solid #33db24; }
         .announcement{ background-color: #fff3cd; border-left: 4px solid #ffc107; }
+        /* Manual announcements (created via announcement.json / UI) */
+        .announcement-manual { background-color: #fff8e1; border-left: 4px solid #ff9800; }
+        /* Announcements that come from the schedule feed (official) */
+        .announcement-schedule { background-color: #e8f4ff; border-left: 4px solid #2196F3; }
 
         /* Стили для кастомного чекбокса */
         .checkbox-container {
@@ -731,5 +735,101 @@ padding: 4px;
             /* На мобильных показываем элементы с классом mobile-only */
             .mobile-only { display: inline-flex; }
         }
+
+/* Styles for the announcement modal and action buttons */
+#announcementModal {
+    display: none; /* controlled by script */
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
+    z-index: 9999;
+}
+
+#announcementModal > div {
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 10px;
+    max-width: 520px;
+    width: 92%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+#announcementModal h3 {
+    margin: 0 0 8px 0;
+    color: #1c375c;
+}
+
+#announcementModal label {
+    font-size: 0.95em;
+    color: #2b3a57;
+}
+
+#announcementModal input[type="text"],
+#announcementModal input[type="date"],
+#announcementModal input[type="time"],
+#announcementModal textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    margin-top: 6px;
+    border: 1px solid #d0d7e0;
+    border-radius: 8px;
+    background: #fbfdff;
+}
+
+#announcementModal textarea { resize: vertical; }
+
+#announcementModal .buttons { display:flex; gap:8px; justify-content:flex-end; margin-top:6px }
+
+#announcementModal button { cursor: pointer; border-radius: 8px; padding: 8px 12px; border: none; }
+
+#ann-cancel { background: transparent; border: 1px solid #c2c7ce; color: #333; }
+#ann-submit { background: #2196F3; color: white; box-shadow: 0 4px 10px rgba(33,150,243,0.2); }
+
+.add-ann-btn, .mobile-add-ann-btn {
+    background: #1890ff;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85em;
+}
+
+.add-ann-btn:hover, .mobile-add-ann-btn:hover { background: #0b7dda }
+
+.mobile-add-ann-btn { width: 100%; display: block; }
+
+/* Inline '+' next to "Занятий нет" */
+.add-ann-inline {
+    color: #1890ff;
+    cursor: pointer;
+    margin-left: 6px;
+    font-weight: 700;
+    user-select: none;
+}
+.add-ann-inline:hover {
+    color: #0b7dda;
+}
+
+.ann-edit-btn {
+    background: #fff;
+    border: 1px solid #d0d7e0;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 8px;
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+.ann-edit-btn:hover {
+    border-color: #a8b3c7;
+}
+
 
 
