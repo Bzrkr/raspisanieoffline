@@ -1415,52 +1415,52 @@
                             auditoryName.textContent = result.auditory;
                         }
                         if (lessonsInThisSlot.length > 0) {
-                            // Если несколько записей в слоте — показываем только ту, что начинается раньше
+                            // Если несколько записей в слоте — показываем все, отсортированные по времени начала
                             lessonsInThisSlot.sort((a, b) => { try { return convertToMinutes(a.startTime) - convertToMinutes(b.startTime); } catch (e) { return 0; } });
-                            const lesson = lessonsInThisSlot[0];
-                            const lessonDiv = document.createElement('div');
-                            const typeClass = getLessonTypeClass(lesson.type, lesson.isAnnouncement, lesson.annSource);
-                            lessonDiv.className = `mobile-lesson ${typeClass}`;
-                            const startTime = lesson.startTime.substring(0, 5);
-                            const endTime = lesson.endTime.substring(0, 5);
-                            const groupsText = lesson.groups.length > 0 
-                                ? lesson.groups.map(g => 
-                                    `<a href="https://iis.bsuir.by/schedule/${g}" target="_blank" class="mobile-group-link">${g}</a>`
-                                  ).join(', ')
-                                : '';
-                            
-                            const periodHtml = (lesson.dateLesson && lesson.dateLesson.trim())
-                                ? `<div class="mobile-lesson-period">Дата: ${lesson.dateLesson}</div>`
-                                : ((lesson.startDate || lesson.endDate)
-                                    ? `<div class="mobile-lesson-period">Период: с ${lesson.startDate || ''}${(lesson.startDate && lesson.endDate) ? ' по ' : ''}${lesson.endDate || ''}</div>`
-                                    : '');
-                            const weeksHtml = (lesson.weeks && lesson.weeks.length > 0)
-                                ? `<div class="mobile-lesson-weeks">Недели: ${lesson.weeks.join(', ')}</div>`
-                                : '';
-                            const resolvedMobileTeacherUrlId = lesson.teacherUrlId || findTeacherUrlIdByFio(lesson.teacher);
-                            const teacherUrl = resolvedMobileTeacherUrlId
-                                ? `https://iis.bsuir.by/schedule/${encodeURIComponent(resolvedMobileTeacherUrlId)}`
-                                : `https://iis.bsuir.by/schedule/`;
-                            lessonDiv.innerHTML = `
-                                <div class="mobile-lesson-time">${startTime}—${endTime}</div>
-                                ${(periodHtml || weeksHtml) ? `<div class="mobile-lesson-meta">${periodHtml}${weeksHtml}</div>` : ''}
-                                <div class="mobile-lesson-subject">${lesson.subject}${lesson.type ? ` <span class="lesson-type-inline">(${lesson.type})</span>` : ''}</div>
-                                ${groupsText ? `<div class="mobile-lesson-groups">${groupsText}</div>` : ''}
-                                <div class="mobile-lesson-teacher"><a href="${teacherUrl}" target="_blank" rel="noopener" class="teacher-link">${lesson.teacher}</a></div>
-                                ${lesson.note ? `<div class="mobile-lesson-note">${lesson.note}</div>` : ''}
-                            `;
-                            // Toggle meta visibility on time click (mobile)
-                            const mobileMetaEl = lessonDiv.querySelector('.mobile-lesson-meta');
-                            const mobileTimeEl = lessonDiv.querySelector('.mobile-lesson-time');
-                            if (mobileMetaEl && mobileTimeEl) {
-                                mobileMetaEl.style.display = 'none';
-                                mobileTimeEl.addEventListener('click', () => {
-                                    mobileMetaEl.style.display = (mobileMetaEl.style.display === 'none') ? 'block' : 'none';
-                                });
-                            }
-                            // If announcement from announcement.json — add edit button
-                           
-                            auditoryCard.appendChild(lessonDiv);
+                            lessonsInThisSlot.forEach(lesson => {
+                                const lessonDiv = document.createElement('div');
+                                const typeClass = getLessonTypeClass(lesson.type, lesson.isAnnouncement, lesson.annSource);
+                                lessonDiv.className = `mobile-lesson ${typeClass}`;
+                                const startTime = lesson.startTime ? lesson.startTime.substring(0, 5) : '';
+                                const endTime = lesson.endTime ? lesson.endTime.substring(0, 5) : '';
+                                const groupsText = (lesson.groups && lesson.groups.length > 0)
+                                    ? lesson.groups.map(g => `<a href="https://iis.bsuir.by/schedule/${g}" target="_blank" class="mobile-group-link">${g}</a>`).join(', ')
+                                    : '';
+
+                                const periodHtml = (lesson.dateLesson && lesson.dateLesson.trim())
+                                    ? `<div class="mobile-lesson-period">Дата: ${lesson.dateLesson}</div>`
+                                    : ((lesson.startDate || lesson.endDate)
+                                        ? `<div class="mobile-lesson-period">Период: с ${lesson.startDate || ''}${(lesson.startDate && lesson.endDate) ? ' по ' : ''}${lesson.endDate || ''}</div>`
+                                        : '');
+                                const weeksHtml = (lesson.weeks && lesson.weeks.length > 0)
+                                    ? `<div class="mobile-lesson-weeks">Недели: ${lesson.weeks.join(', ')}</div>`
+                                    : '';
+                                const resolvedMobileTeacherUrlId = lesson.teacherUrlId || findTeacherUrlIdByFio(lesson.teacher);
+                                const teacherUrl = resolvedMobileTeacherUrlId
+                                    ? `https://iis.bsuir.by/schedule/${encodeURIComponent(resolvedMobileTeacherUrlId)}`
+                                    : `https://iis.bsuir.by/schedule/`;
+
+                                lessonDiv.innerHTML = `
+                                    <div class="mobile-lesson-time">${startTime}—${endTime}</div>
+                                    ${(periodHtml || weeksHtml) ? `<div class="mobile-lesson-meta">${periodHtml}${weeksHtml}</div>` : ''}
+                                    <div class="mobile-lesson-subject">${lesson.subject || ''}${lesson.type ? ` <span class="lesson-type-inline">(${lesson.type})</span>` : ''}</div>
+                                    ${groupsText ? `<div class="mobile-lesson-groups">${groupsText}</div>` : ''}
+                                    <div class="mobile-lesson-teacher"><a href="${teacherUrl}" target="_blank" rel="noopener" class="teacher-link">${lesson.teacher || ''}</a></div>
+                                    ${lesson.note ? `<div class="mobile-lesson-note">${lesson.note}</div>` : ''}
+                                `;
+
+                                // Toggle meta visibility on time click (mobile)
+                                const mobileMetaEl = lessonDiv.querySelector('.mobile-lesson-meta');
+                                const mobileTimeEl = lessonDiv.querySelector('.mobile-lesson-time');
+                                if (mobileMetaEl && mobileTimeEl) {
+                                    mobileMetaEl.style.display = 'none';
+                                    mobileTimeEl.addEventListener('click', () => {
+                                        mobileMetaEl.style.display = (mobileMetaEl.style.display === 'none') ? 'block' : 'none';
+                                    });
+                                }
+
+                                auditoryCard.appendChild(lessonDiv);
+                            });
                         } else {
                             // Если занятий нет, но чекбокс "Показать все кабинеты" включен, показываем сообщение с кнопкой
                             const noLessonDiv = document.createElement('div');
