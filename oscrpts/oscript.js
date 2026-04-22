@@ -863,7 +863,9 @@
                 'Зачет': 'Test',
                 'УПз': 'Instpractice',
                 'УЛР': 'Instlab',
-                'УЛк': 'Instlecture'
+                'УЛк': 'Instlecture',
+                'Канд. экзамен': 'CandExam'
+                
             };
             return typeMap[lessonType] || '';
         }

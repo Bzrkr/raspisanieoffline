@@ -493,6 +493,7 @@ padding: 4px;
         .practice { background-color: #ffffff; border-left: 4px solid #8e4fec; }
         .lab { background-color: #ffffff; border-left: 4px solid #f98f43; }
         .exam { background-color: #ffffff; border-left: 4px solid #f95b5e; }
+        .CandExam{ background-color: #ffffff; border-left: 4px solid #d38385ea; }
         .consultation { background-color: #ffffff; border-left: 4px solid #4fe8ff; }
         .organization { background-color: #ffffff; border-left: 4px solid #c213ab; }
         .Test{ background-color: #ffffff; border-left: 4px solid #ffd900; }
