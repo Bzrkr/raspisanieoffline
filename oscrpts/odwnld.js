@@ -119,15 +119,20 @@ async function fetchJson(url) {
                     teacherSchedules: schedulesByTeacher
                 };
 
-                // Автоматически шифруем файл с использованием дефолтного пароля
-                try {
-                    log('Шифрую данные с предустановленным паролем...');
-                    const wrapped = await encryptObject(payload, DEFAULT_PASSPHRASE);
-                    saveAsJson('schedules.json', wrapped);
-                    log('Готово. Файл schedules.json сохранён и зашифрован.');
-                } catch (e) {
-                    console.error('Ошибка при шифровании:', e);
-                    log('Файл не сохранён — ошибка при шифровании.');
+                const doEncrypt = document.getElementById('encryptCheckbox').checked;
+                if (doEncrypt) {
+                    try {
+                        log('Шифрую данные с предустановленным паролем...');
+                        const wrapped = await encryptObject(payload, DEFAULT_PASSPHRASE);
+                        saveAsJson('schedules.json', wrapped);
+                        log('Готово. Файл schedules.json сохранён и зашифрован.');
+                    } catch (e) {
+                        console.error('Ошибка при шифровании:', e);
+                        log('Файл не сохранён — ошибка при шифровании.');
+                    }
+                } else {
+                    saveAsJson('schedules.json', payload);
+                    log('Готово. Файл schedules.json сохранён ( без шифрования).');
                 }
               
             } catch (e) {
@@ -136,6 +141,6 @@ async function fetchJson(url) {
                 btn.disabled = false;
             }
              
-                    window.open('https://github.com/Bzrkr/raspisaniebeta/upload/main', '_blank', 'noopener');
+                    window.open('https://github.com/Bzrkr/raspisanieoffline/upload/main', '_blank', 'noopener');
               
-        }
+        }   
